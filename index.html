@@ -129,7 +129,7 @@
         <div class="glow-orb orb-3"></div>
     </div>
 
-    <!-- 顶栏 (Glass Navigation) -->
+    <!-- 顶栏 Navigation -->
     <header class="glass-card sticky top-0 z-40 border-b border-white/40">
         <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
             <div class="flex items-center space-x-3">
@@ -156,7 +156,7 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-6 space-y-5">
-        <!-- 仪表盘大盘概览 -->
+        <!-- 仪表盘概览卡片 -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
             <div class="md:col-span-4 glass-card p-5 rounded-3xl flex items-center justify-between relative overflow-hidden">
                 <div class="space-y-1 z-10">
@@ -165,7 +165,7 @@
                         <span id="overallPercent" class="text-3xl font-black text-slate-900 tabular-nums">0</span>
                         <span class="text-lg font-bold text-indigo-600">%</span>
                     </div>
-                    <p class="text-[11px] text-slate-400 font-medium">智能计算已还与待还比例</p>
+                    <p class="text-[11px] text-slate-400 font-medium">已还与待还实时比例</p>
                 </div>
                 <div class="relative w-20 h-20 flex items-center justify-center">
                     <svg class="w-20 h-20 transform -rotate-90">
@@ -177,62 +177,68 @@
 
             <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div class="glass-card p-4 rounded-2xl flex flex-col justify-between spring-act">
-                    <p class="text-xs text-slate-500 font-semibold">借款总本金</p>
+                    <p class="text-xs text-slate-500 font-semibold">总本金金额</p>
                     <h3 id="statTotalPrincipal" class="text-base md:text-xl font-black text-slate-900 mt-2 tracking-tight tabular-nums">￥0.00</h3>
                 </div>
                 <div class="glass-card p-4 rounded-2xl flex flex-col justify-between spring-act">
-                    <p class="text-xs text-slate-500 font-semibold">剩余待还本金</p>
+                    <p class="text-xs text-rose-600 font-semibold">待还 / 待收本金</p>
                     <h3 id="statRemainingPrincipal" class="text-base md:text-xl font-black text-rose-500 mt-2 tracking-tight tabular-nums">￥0.00</h3>
                 </div>
                 <div class="glass-card p-4 rounded-2xl flex flex-col justify-between spring-act">
-                    <p class="text-xs text-slate-500 font-semibold">已还总本金</p>
+                    <p class="text-xs text-emerald-600 font-semibold">已还 / 已收本金</p>
                     <h3 id="statPaidPrincipal" class="text-base md:text-xl font-black text-emerald-600 mt-2 tracking-tight tabular-nums">￥0.00</h3>
                 </div>
                 <div class="glass-card p-4 rounded-2xl flex flex-col justify-between spring-act">
-                    <p class="text-xs text-slate-500 font-semibold">累计支出利息</p>
+                    <p class="text-xs text-amber-600 font-semibold">累计利息结余</p>
                     <h3 id="statPaidInterest" class="text-base md:text-xl font-black text-amber-500 mt-2 tracking-tight tabular-nums">￥0.00</h3>
                 </div>
             </div>
         </div>
 
-        <!-- 操控与筛选栏 -->
+        <!-- 操控与多维筛选栏 (含类型筛选) -->
         <div class="glass-card p-3.5 rounded-3xl flex flex-col md:flex-row justify-between gap-3 items-center">
             <button onclick="openModal()" class="w-full md:w-auto bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-bold px-6 py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 spring-act">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
-                新增借款记录
+                新增记录
             </button>
-            <div class="flex gap-2.5 w-full md:w-auto">
-                <select id="filterPlatform" onchange="render()" class="glass-input flex-1 md:flex-none text-xs md:text-sm px-4 py-3 rounded-2xl text-slate-800 font-semibold outline-none cursor-pointer">
+            <div class="flex gap-2.5 w-full md:w-auto overflow-x-auto">
+                <select id="filterDirection" onchange="render()" class="glass-input flex-1 md:flex-none text-xs md:text-sm px-3.5 py-3 rounded-2xl text-slate-800 font-semibold outline-none cursor-pointer">
+                    <option value="ALL">全部类型 (借入/借出)</option>
+                    <option value="BORROW">我借入的 (负债)</option>
+                    <option value="LEND">我借出的 (资产)</option>
+                </select>
+                <select id="filterPlatform" onchange="render()" class="glass-input flex-1 md:flex-none text-xs md:text-sm px-3.5 py-3 rounded-2xl text-slate-800 font-semibold outline-none cursor-pointer">
                     <option value="ALL">全部平台渠道</option>
                     <option value="支付宝-借呗">支付宝-借呗</option>
                     <option value="支付宝-花呗">支付宝-花呗</option>
                     <option value="微粒贷">微粒贷</option>
                     <option value="京东金条">京东金条</option>
                     <option value="银行贷款">银行贷款</option>
-                    <option value="个人/好友借款">个人/好友借款</option>
+                    <option value="个人借款/借出">个人借款/借出</option>
                     <option value="其他">其他</option>
                 </select>
-                <select id="filterStatus" onchange="render()" class="glass-input flex-1 md:flex-none text-xs md:text-sm px-4 py-3 rounded-2xl text-slate-800 font-semibold outline-none cursor-pointer">
+                <select id="filterStatus" onchange="render()" class="glass-input flex-1 md:flex-none text-xs md:text-sm px-3.5 py-3 rounded-2xl text-slate-800 font-semibold outline-none cursor-pointer">
                     <option value="ALL">全部状态</option>
-                    <option value="未还清">还款中</option>
-                    <option value="已还清">已还清</option>
+                    <option value="未还清">进行中</option>
+                    <option value="已还清">已结清</option>
                 </select>
             </div>
         </div>
 
-        <!-- 明细列表/卡片展示 (已补齐还款日期) -->
+        <!-- 明细列表/卡片展示 -->
         <div class="bg-transparent md:glass-card md:rounded-3xl overflow-hidden">
             <table class="w-full text-left text-sm text-slate-600 responsive-table">
                 <thead class="bg-white/40 backdrop-blur-md text-slate-400 font-bold border-b border-white/50 text-[11px] uppercase tracking-wider">
                     <tr>
-                        <th class="p-4">借款项目 / 平台</th>
-                        <th class="p-4">借款日期</th>
-                        <th class="p-4">还款日期</th>
-                        <th class="p-4">借款本金</th>
-                        <th class="p-4">已还本金</th>
-                        <th class="p-4">已还利息</th>
-                        <th class="p-4">还款进度</th>
-                        <th class="p-4">应还到期</th>
+                        <th class="p-4">类型</th>
+                        <th class="p-4">项目 / 平台</th>
+                        <th class="p-4">发生日期</th>
+                        <th class="p-4">还款/收款日</th>
+                        <th class="p-4">总本金</th>
+                        <th class="p-4">已还/已收本金</th>
+                        <th class="p-4">利息</th>
+                        <th class="p-4">进度</th>
+                        <th class="p-4">到期日</th>
                         <th class="p-4">状态</th>
                         <th class="p-4 text-center">操作</th>
                     </tr>
@@ -249,52 +255,69 @@
         <div class="glass-card bg-white/92 rounded-t-[2.5rem] md:rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-4 max-h-[92vh] overflow-y-auto pb-10 md:pb-6 border-t border-white">
             <div class="w-12 h-1.5 bg-slate-300/80 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
             <div class="flex justify-between items-center border-b border-slate-200/60 pb-3.5">
-                <h3 id="modalTitle" class="text-base font-black text-slate-900 tracking-tight">新增借款记录</h3>
+                <h3 id="modalTitle" class="text-base font-black text-slate-900 tracking-tight">新增记录</h3>
                 <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-200/60 flex items-center justify-center text-slate-500 hover:bg-slate-300/60 transition spring-act"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <form id="loanForm" onsubmit="saveLoan(event)" class="space-y-4">
                 <input type="hidden" id="loanId">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1.5">借款渠道/平台</label>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5">记录类型</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="direction" value="BORROW" checked class="peer hidden" onchange="toggleDirectionUI()">
+                            <div class="py-3 text-center rounded-2xl border border-slate-200 text-xs font-bold text-slate-600 peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 transition spring-act">
+                                📥 我借入的 (负债)
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="direction" value="LEND" class="peer hidden" onchange="toggleDirectionUI()">
+                            <div class="py-3 text-center rounded-2xl border border-slate-200 text-xs font-bold text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition spring-act">
+                                📤 我借出的 (资产)
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5">渠道 / 平台</label>
                     <select id="platform" required class="glass-input w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800">
                         <option value="支付宝-借呗">支付宝-借呗</option>
                         <option value="支付宝-花呗">支付宝-花呗</option>
                         <option value="微粒贷">微粒贷</option>
                         <option value="京东金条">京东金条</option>
                         <option value="银行贷款">银行贷款</option>
-                        <option value="个人/好友借款">个人/好友借款</option>
+                        <option value="个人借款/借出">个人借款/借出</option>
                         <option value="其他">其他</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1.5">项目说明 / 备注</label>
-                    <input type="text" id="title" required placeholder="如：周转资金、大件分期等" class="glass-input w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800">
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5">说明 / 备注 / 借款人</label>
+                    <input type="text" id="title" required placeholder="如：借给张三、周转资金" class="glass-input w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1.5">借款日期</label>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5">借出/借入日期</label>
                         <input type="date" id="loanDate" required class="glass-input w-full rounded-2xl px-3.5 py-3.5 text-sm font-semibold text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-indigo-600 mb-1.5">还款/已还日期</label>
+                        <label id="lblRepayDate" class="block text-xs font-bold text-indigo-600 mb-1.5">最近还款/收款日</label>
                         <input type="date" id="repayDate" class="glass-input w-full rounded-2xl px-3.5 py-3.5 text-sm font-semibold text-slate-800">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1.5">应还/到期日期</label>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5">到期日期</label>
                     <input type="date" id="dueDate" class="glass-input w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1.5">借款总本金 (元)</label>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5">总本金 (元)</label>
                     <input type="number" step="0.01" id="principal" required min="0" placeholder="0.00" class="glass-input w-full rounded-2xl px-4 py-3.5 text-base font-black text-slate-900 tabular-nums">
                 </div>
                 <div class="grid grid-cols-2 gap-3 bg-white/40 p-4 rounded-2xl border border-white/60 shadow-inner">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1.5">已还本金 (元)</label>
+                        <label id="lblPaidP" class="block text-xs font-bold text-slate-500 mb-1.5">已还/已收本金 (元)</label>
                         <input type="number" step="0.01" id="paidPrincipal" value="0" min="0" class="glass-input w-full rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-800 tabular-nums">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1.5">已付利息 (元)</label>
+                        <label id="lblPaidI" class="block text-xs font-bold text-slate-500 mb-1.5">利息 (元)</label>
                         <input type="number" step="0.01" id="paidInterest" value="0" min="0" class="glass-input w-full rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-800 tabular-nums">
                     </div>
                 </div>
@@ -307,31 +330,42 @@
     </div>
 
     <script>
-        let loans = JSON.parse(localStorage.getItem('my_loans_v4') || '[]');
+        let loans = JSON.parse(localStorage.getItem('my_loans_v5') || '[]');
 
         function saveToStorage() {
-            localStorage.setItem('my_loans_v4', JSON.stringify(loans));
+            localStorage.setItem('my_loans_v5', JSON.stringify(loans));
         }
 
         function formatMoney(num) {
             return '￥' + Number(num || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
+        function toggleDirectionUI() {
+            const dir = document.querySelector('input[name="direction"]:checked').value;
+            const isLend = dir === 'LEND';
+            document.getElementById('lblRepayDate').innerText = isLend ? '最近收款/还款日' : '最近还款/划扣日';
+            document.getElementById('lblPaidP').innerText = isLend ? '已收本金 (元)' : '已还本金 (元)';
+            document.getElementById('lblPaidI').innerText = isLend ? '已收利息 (元)' : '已付利息 (元)';
+        }
+
         function render() {
             const list = document.getElementById('loanList');
+            const dirFilter = document.getElementById('filterDirection').value;
             const platformFilter = document.getElementById('filterPlatform').value;
             const statusFilter = document.getElementById('filterStatus').value;
 
             let filtered = loans.filter(item => {
+                const itemDir = item.direction || 'BORROW';
+                const matchDir = dirFilter === 'ALL' || itemDir === dirFilter;
                 const matchPlatform = platformFilter === 'ALL' || item.platform === platformFilter;
                 const isFinished = item.paidPrincipal >= item.principal;
                 const matchStatus = statusFilter === 'ALL' || 
                     (statusFilter === '已还清' && isFinished) || 
                     (statusFilter === '未还清' && !isFinished);
-                return matchPlatform && matchStatus;
+                return matchDir && matchPlatform && matchStatus;
             });
 
-            // 联动计算
+            // 汇总计算
             let totalP = 0, paidP = 0, paidI = 0;
             filtered.forEach(item => {
                 totalP += Number(item.principal || 0);
@@ -342,7 +376,6 @@
             const overallPct = totalP > 0 ? Math.min(100, Math.round((paidP / totalP) * 100)) : 0;
             document.getElementById('overallPercent').innerText = overallPct;
             
-            // 环形 SVG 动画计算
             const circle = document.getElementById('progressCircle');
             const circumference = 201;
             const offset = circumference - (overallPct / 100) * circumference;
@@ -355,43 +388,49 @@
 
             list.innerHTML = '';
             if (filtered.length === 0) {
-                list.innerHTML = `<tr><td colspan="10" class="text-center py-16 text-slate-400 glass-card rounded-3xl">暂无借还款记录，点击“新增借款记录”开始添加</td></tr>`;
+                list.innerHTML = `<tr><td colspan="11" class="text-center py-16 text-slate-400 glass-card rounded-3xl">暂无记录，点击“新增记录”开始添加</td></tr>`;
                 return;
             }
 
             filtered.forEach(item => {
                 const percent = Math.min(100, Math.round((item.paidPrincipal / item.principal) * 100) || 0);
                 const isFinished = item.paidPrincipal >= item.principal;
+                const isLend = (item.direction === 'LEND');
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-white/40 transition md:table-row';
                 
                 tr.innerHTML = `
-                    <td class="p-4" data-label="平台项目">
+                    <td class="p-4" data-label="类型">
+                        ${isLend 
+                            ? '<span class="px-2.5 py-1 text-[11px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded-full font-black">📤 借出</span>' 
+                            : '<span class="px-2.5 py-1 text-[11px] bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 rounded-full font-black">📥 借入</span>'}
+                    </td>
+                    <td class="p-4" data-label="平台/项目">
                         <div>
-                            <span class="inline-block px-2.5 py-0.5 text-[11px] rounded-lg bg-indigo-50/80 text-indigo-600 font-bold border border-indigo-100/60 mb-1">${item.platform}</span>
+                            <span class="inline-block px-2 py-0.5 text-[10px] rounded-lg bg-slate-100 text-slate-500 font-bold border border-slate-200/60 mb-1">${item.platform}</span>
                             <div class="font-black text-slate-900 tracking-tight">${item.title}</div>
                         </div>
                     </td>
-                    <td class="p-4 text-xs text-slate-400 font-medium tabular-nums" data-label="借款日期">${item.loanDate || '-'}</td>
-                    <td class="p-4 text-xs text-indigo-600 font-bold tabular-nums" data-label="还款日期">${item.repayDate || '-'}</td>
-                    <td class="p-4 font-black text-slate-900 tracking-tight tabular-nums" data-label="借款本金">${formatMoney(item.principal)}</td>
-                    <td class="p-4 text-emerald-600 font-bold tabular-nums" data-label="已还本金">${formatMoney(item.paidPrincipal)}</td>
-                    <td class="p-4 text-amber-500 font-bold tabular-nums" data-label="已还利息">${formatMoney(item.paidInterest)}</td>
-                    <td class="p-4 md:w-32" data-label="还款进度">
-                        <div class="w-full md:w-28">
+                    <td class="p-4 text-xs text-slate-400 font-medium tabular-nums" data-label="发生日期">${item.loanDate || '-'}</td>
+                    <td class="p-4 text-xs text-indigo-600 font-bold tabular-nums" data-label="还/收款日">${item.repayDate || '-'}</td>
+                    <td class="p-4 font-black text-slate-900 tracking-tight tabular-nums" data-label="总本金">${formatMoney(item.principal)}</td>
+                    <td class="p-4 text-emerald-600 font-bold tabular-nums" data-label="已还/收">${formatMoney(item.paidPrincipal)}</td>
+                    <td class="p-4 text-amber-500 font-bold tabular-nums" data-label="利息">${formatMoney(item.paidInterest)}</td>
+                    <td class="p-4 md:w-28" data-label="进度">
+                        <div class="w-full md:w-24">
                             <div class="flex justify-between text-[11px] mb-1 text-slate-400 font-bold tabular-nums">
-                                <span>已还</span><span>${percent}%</span>
+                                <span>${percent}%</span>
                             </div>
                             <div class="w-full bg-slate-200/60 rounded-full h-1.5 overflow-hidden">
                                 <div class="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 rounded-full transition-all duration-500 shadow-sm" style="width: ${percent}%"></div>
                             </div>
                         </div>
                     </td>
-                    <td class="p-4 text-xs text-slate-400 font-medium tabular-nums" data-label="应还到期">${item.dueDate || '无'}</td>
+                    <td class="p-4 text-xs text-slate-400 font-medium tabular-nums" data-label="到期日">${item.dueDate || '无'}</td>
                     <td class="p-4" data-label="当前状态">
                         ${isFinished 
-                            ? '<span class="px-3 py-1 text-[11px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded-full font-extrabold">已还清</span>' 
-                            : '<span class="px-3 py-1 text-[11px] bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-full font-extrabold">还款中</span>'}
+                            ? '<span class="px-3 py-1 text-[11px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded-full font-extrabold">已结清</span>' 
+                            : '<span class="px-3 py-1 text-[11px] bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-full font-extrabold">进行中</span>'}
                     </td>
                     <td class="p-4 text-center space-x-2">
                         <button onclick="editLoan('${item.id}')" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold bg-indigo-50/80 px-3 py-1.5 rounded-xl transition spring-act border border-indigo-100/50">编辑</button>
@@ -406,8 +445,13 @@
             document.getElementById('modal').classList.remove('hidden');
             const today = new Date().toISOString().slice(0, 10);
             if (editItem) {
-                document.getElementById('modalTitle').innerText = '更新账目明细';
+                document.getElementById('modalTitle').innerText = '更新明细';
                 document.getElementById('loanId').value = editItem.id;
+                
+                const dir = editItem.direction || 'BORROW';
+                document.querySelector(`input[name="direction"][value="${dir}"]`).checked = true;
+                toggleDirectionUI();
+
                 document.getElementById('platform').value = editItem.platform;
                 document.getElementById('title').value = editItem.title;
                 document.getElementById('loanDate').value = editItem.loanDate || today;
@@ -417,9 +461,11 @@
                 document.getElementById('paidInterest').value = editItem.paidInterest;
                 document.getElementById('dueDate').value = editItem.dueDate || '';
             } else {
-                document.getElementById('modalTitle').innerText = '新增借款记录';
+                document.getElementById('modalTitle').innerText = '新增记录';
                 document.getElementById('loanForm').reset();
                 document.getElementById('loanId').value = '';
+                document.querySelector('input[name="direction"][value="BORROW"]').checked = true;
+                toggleDirectionUI();
                 document.getElementById('loanDate').value = today;
                 document.getElementById('repayDate').value = '';
             }
@@ -432,8 +478,11 @@
         function saveLoan(e) {
             e.preventDefault();
             const id = document.getElementById('loanId').value;
+            const dir = document.querySelector('input[name="direction"]:checked').value;
+            
             const data = {
                 id: id || Date.now().toString(),
+                direction: dir,
                 platform: document.getElementById('platform').value,
                 title: document.getElementById('title').value,
                 loanDate: document.getElementById('loanDate').value,
@@ -462,7 +511,7 @@
         }
 
         function deleteLoan(id) {
-            if (confirm('确定要彻底删除该笔借款记录吗？')) {
+            if (confirm('确定要彻底删除该笔记录吗？')) {
                 loans = loans.filter(l => l.id !== id);
                 saveToStorage();
                 render();
