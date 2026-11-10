@@ -21,7 +21,6 @@
             overflow-x: hidden;
         }
 
-        /* 强制等宽数字对齐，防止财务数据跳动 */
         .tabular-nums {
             font-variant-numeric: tabular-nums;
         }
@@ -33,14 +32,6 @@
             -webkit-backdrop-filter: blur(28px) saturate(210%);
             border: 1px solid rgba(255, 255, 255, 0.6);
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8);
-        }
-
-        .glass-card-dark {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(30px) saturate(200%);
-            -webkit-backdrop-filter: blur(30px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
         }
 
         .glass-input {
@@ -56,7 +47,7 @@
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 4px 12px rgba(99, 102, 241, 0.1);
         }
 
-        /* 顶级弥散光晕背景 */
+        /* 弥散光晕背景 */
         .ambient-mesh {
             position: fixed;
             inset: 0;
@@ -81,7 +72,6 @@
             100% { transform: translate(-30px, 30px) scale(0.95); }
         }
 
-        /* 弹簧物理触控效果 */
         .spring-act {
             transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -166,9 +156,8 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-6 space-y-5">
-        <!-- 仪表盘大盘概览 (环形进度 + 动态联动) -->
+        <!-- 仪表盘大盘概览 -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
-            <!-- 总大盘环形进度卡片 -->
             <div class="md:col-span-4 glass-card p-5 rounded-3xl flex items-center justify-between relative overflow-hidden">
                 <div class="space-y-1 z-10">
                     <p class="text-xs text-slate-500 font-semibold tracking-wide">总体清偿率</p>
@@ -186,7 +175,6 @@
                 </div>
             </div>
 
-            <!-- 四大关键数据卡片 -->
             <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div class="glass-card p-4 rounded-2xl flex flex-col justify-between spring-act">
                     <p class="text-xs text-slate-500 font-semibold">借款总本金</p>
@@ -207,7 +195,7 @@
             </div>
         </div>
 
-        <!-- 操控与多维筛选栏 -->
+        <!-- 操控与筛选栏 -->
         <div class="glass-card p-3.5 rounded-3xl flex flex-col md:flex-row justify-between gap-3 items-center">
             <button onclick="openModal()" class="w-full md:w-auto bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-bold px-6 py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 spring-act">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
@@ -232,18 +220,19 @@
             </div>
         </div>
 
-        <!-- 明细列表/卡片展示 -->
+        <!-- 明细列表/卡片展示 (已补齐还款日期) -->
         <div class="bg-transparent md:glass-card md:rounded-3xl overflow-hidden">
             <table class="w-full text-left text-sm text-slate-600 responsive-table">
                 <thead class="bg-white/40 backdrop-blur-md text-slate-400 font-bold border-b border-white/50 text-[11px] uppercase tracking-wider">
                     <tr>
                         <th class="p-4">借款项目 / 平台</th>
                         <th class="p-4">借款日期</th>
+                        <th class="p-4">还款日期</th>
                         <th class="p-4">借款本金</th>
                         <th class="p-4">已还本金</th>
                         <th class="p-4">已还利息</th>
                         <th class="p-4">还款进度</th>
-                        <th class="p-4">应还日期</th>
+                        <th class="p-4">应还到期</th>
                         <th class="p-4">状态</th>
                         <th class="p-4 text-center">操作</th>
                     </tr>
@@ -255,7 +244,7 @@
         </div>
     </main>
 
-    <!-- iOS 抽屉式弹窗 Modal (Pro Sheet) -->
+    <!-- iOS 抽屉式弹窗 Modal -->
     <div id="modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 z-50 transition-all duration-300">
         <div class="glass-card bg-white/92 rounded-t-[2.5rem] md:rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-4 max-h-[92vh] overflow-y-auto pb-10 md:pb-6 border-t border-white">
             <div class="w-12 h-1.5 bg-slate-300/80 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
@@ -287,9 +276,13 @@
                         <input type="date" id="loanDate" required class="glass-input w-full rounded-2xl px-3.5 py-3.5 text-sm font-semibold text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1.5">应还/到期日期</label>
-                        <input type="date" id="dueDate" class="glass-input w-full rounded-2xl px-3.5 py-3.5 text-sm font-semibold text-slate-800">
+                        <label class="block text-xs font-bold text-indigo-600 mb-1.5">还款/已还日期</label>
+                        <input type="date" id="repayDate" class="glass-input w-full rounded-2xl px-3.5 py-3.5 text-sm font-semibold text-slate-800">
                     </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5">应还/到期日期</label>
+                    <input type="date" id="dueDate" class="glass-input w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-1.5">借款总本金 (元)</label>
@@ -351,7 +344,7 @@
             
             // 环形 SVG 动画计算
             const circle = document.getElementById('progressCircle');
-            const circumference = 201; // 2 * PI * r (32)
+            const circumference = 201;
             const offset = circumference - (overallPct / 100) * circumference;
             circle.style.strokeDashoffset = offset;
 
@@ -362,7 +355,7 @@
 
             list.innerHTML = '';
             if (filtered.length === 0) {
-                list.innerHTML = `<tr><td colspan="9" class="text-center py-16 text-slate-400 glass-card rounded-3xl">暂无借还款记录，点击“新增借款记录”开始添加</td></tr>`;
+                list.innerHTML = `<tr><td colspan="10" class="text-center py-16 text-slate-400 glass-card rounded-3xl">暂无借还款记录，点击“新增借款记录”开始添加</td></tr>`;
                 return;
             }
 
@@ -380,6 +373,7 @@
                         </div>
                     </td>
                     <td class="p-4 text-xs text-slate-400 font-medium tabular-nums" data-label="借款日期">${item.loanDate || '-'}</td>
+                    <td class="p-4 text-xs text-indigo-600 font-bold tabular-nums" data-label="还款日期">${item.repayDate || '-'}</td>
                     <td class="p-4 font-black text-slate-900 tracking-tight tabular-nums" data-label="借款本金">${formatMoney(item.principal)}</td>
                     <td class="p-4 text-emerald-600 font-bold tabular-nums" data-label="已还本金">${formatMoney(item.paidPrincipal)}</td>
                     <td class="p-4 text-amber-500 font-bold tabular-nums" data-label="已还利息">${formatMoney(item.paidInterest)}</td>
@@ -393,7 +387,7 @@
                             </div>
                         </div>
                     </td>
-                    <td class="p-4 text-xs text-slate-400 font-medium tabular-nums" data-label="应还日期">${item.dueDate || '无'}</td>
+                    <td class="p-4 text-xs text-slate-400 font-medium tabular-nums" data-label="应还到期">${item.dueDate || '无'}</td>
                     <td class="p-4" data-label="当前状态">
                         ${isFinished 
                             ? '<span class="px-3 py-1 text-[11px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded-full font-extrabold">已还清</span>' 
@@ -417,6 +411,7 @@
                 document.getElementById('platform').value = editItem.platform;
                 document.getElementById('title').value = editItem.title;
                 document.getElementById('loanDate').value = editItem.loanDate || today;
+                document.getElementById('repayDate').value = editItem.repayDate || '';
                 document.getElementById('principal').value = editItem.principal;
                 document.getElementById('paidPrincipal').value = editItem.paidPrincipal;
                 document.getElementById('paidInterest').value = editItem.paidInterest;
@@ -426,6 +421,7 @@
                 document.getElementById('loanForm').reset();
                 document.getElementById('loanId').value = '';
                 document.getElementById('loanDate').value = today;
+                document.getElementById('repayDate').value = '';
             }
         }
 
@@ -441,6 +437,7 @@
                 platform: document.getElementById('platform').value,
                 title: document.getElementById('title').value,
                 loanDate: document.getElementById('loanDate').value,
+                repayDate: document.getElementById('repayDate').value,
                 principal: parseFloat(document.getElementById('principal').value) || 0,
                 paidPrincipal: parseFloat(document.getElementById('paidPrincipal').value) || 0,
                 paidInterest: parseFloat(document.getElementById('paidInterest').value) || 0,
