@@ -2,46 +2,110 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <title>借还款与利息管理</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* iOS 安全区域适配 */
+        /* iOS 液态玻璃与安全区域核心样式 */
+        :root {
+            --sat: env(safe-area-inset-top);
+            --sab: env(safe-area-inset-bottom);
+        }
+
         body {
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-top: var(--sat);
+            padding-bottom: calc(var(--sab) + 1rem);
             -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+        }
+
+        /* Liquid Glass 流体玻璃效果器 */
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .liquid-glass-dark {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(24px) saturate(200%);
+            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .liquid-input {
+            background: rgba(241, 245, 249, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(203, 213, 225, 0.6);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .liquid-input:focus {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        /* 弥散流体光线背景 */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.45;
+            animation: float 18s ease-in-out infinite alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #c7d2fe; }
+        .blob-2 { bottom: -10%; right: -5%; width: 60vw; height: 60vw; background: #e0e7ff; animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 30%; width: 40vw; height: 40vw; background: #ddd6fe; animation-delay: -10s; }
+
+        @keyframes float {
+            0% { transform: translate(0px, 0px) scale(1); }
+            50% { transform: translate(30px, -40px) scale(1.08); }
+            100% { transform: translate(-20px, 20px) scale(0.95); }
         }
 
         /* 移动端卡片自适应渲染 */
         @media (max-width: 768px) {
-            .responsive-table thead {
-                display: none;
-            }
+            .responsive-table thead { display: none; }
             .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
                 display: block;
                 width: 100%;
             }
             .responsive-table tr {
-                background-color: #ffffff;
-                margin-bottom: 0.85rem;
-                border: 1px solid #f1f5f9;
-                border-radius: 1rem;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-                padding: 1rem;
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                margin-bottom: 0.9rem;
+                border: 1px solid rgba(255, 255, 255, 0.6);
+                border-radius: 1.25rem;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+                padding: 1.1rem;
             }
             .responsive-table td {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 0.5rem 0;
-                border-bottom: 1px dashed #f8fafc;
+                padding: 0.55rem 0;
+                border-bottom: 1px dashed rgba(226, 232, 240, 0.8);
                 text-align: right;
                 font-size: 0.875rem;
             }
             .responsive-table td:last-child {
                 border-bottom: none;
-                padding-top: 0.75rem;
+                padding-top: 0.85rem;
                 justify-content: flex-end;
                 gap: 0.5rem;
             }
@@ -55,23 +119,33 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen font-sans antialiased">
-    <!-- 顶栏 Header -->
-    <header class="bg-white border-b border-slate-200/80 sticky top-0 z-40">
+<body class="text-slate-800 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+    <!-- 背景流体光晕效果 -->
+    <div class="ambient-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- 顶栏 Header (Liquid Glass 效果) -->
+    <header class="liquid-glass sticky top-0 z-40 transition-all duration-300">
         <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-indigo-500/20 active:scale-95 transition">
                     贷
                 </div>
-                <h1 class="text-base md:text-lg font-bold text-slate-900 tracking-tight">借还款与利息管理</h1>
+                <div>
+                    <h1 class="text-base md:text-lg font-bold text-slate-900 tracking-tight leading-none">借还款与利息</h1>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-wider mt-0.5 uppercase">Liquid Edition</p>
+                </div>
             </div>
             <div class="flex space-x-2">
-                <button onclick="exportData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium active:scale-95">
-                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <button onclick="exportData()" class="liquid-glass hover:bg-white/90 text-slate-700 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium active:scale-95 shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     备份
                 </button>
-                <button onclick="document.getElementById('importFile').click()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium active:scale-95">
-                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <button onclick="document.getElementById('importFile').click()" class="liquid-glass hover:bg-white/90 text-slate-700 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium active:scale-95 shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                     恢复
                 </button>
                 <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
@@ -79,35 +153,35 @@
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 py-6 space-y-5 pb-16">
-        <!-- 概览统计面板 (跟随筛选联动) -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                <p class="text-xs text-slate-400 font-medium">借款总本金</p>
-                <h3 id="statTotalPrincipal" class="text-lg md:text-2xl font-bold text-slate-800 mt-1.5">￥0.00</h3>
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-5 pb-20">
+        <!-- 概览统计面板 (与筛选联动) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+            <div class="liquid-glass p-4.5 rounded-2xl flex flex-col justify-between transition hover:translate-y-[-2px]">
+                <p class="text-xs text-slate-500 font-medium">借款总本金</p>
+                <h3 id="statTotalPrincipal" class="text-lg md:text-2xl font-black text-slate-800 mt-2 tracking-tight">￥0.00</h3>
             </div>
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                <p class="text-xs text-slate-400 font-medium">剩余待还本金</p>
-                <h3 id="statRemainingPrincipal" class="text-lg md:text-2xl font-bold text-rose-600 mt-1.5">￥0.00</h3>
+            <div class="liquid-glass p-4.5 rounded-2xl flex flex-col justify-between transition hover:translate-y-[-2px]">
+                <p class="text-xs text-slate-500 font-medium">剩余待还本金</p>
+                <h3 id="statRemainingPrincipal" class="text-lg md:text-2xl font-black text-rose-500 mt-2 tracking-tight">￥0.00</h3>
             </div>
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                <p class="text-xs text-slate-400 font-medium">已还总本金</p>
-                <h3 id="statPaidPrincipal" class="text-lg md:text-2xl font-bold text-emerald-600 mt-1.5">￥0.00</h3>
+            <div class="liquid-glass p-4.5 rounded-2xl flex flex-col justify-between transition hover:translate-y-[-2px]">
+                <p class="text-xs text-slate-500 font-medium">已还总本金</p>
+                <h3 id="statPaidPrincipal" class="text-lg md:text-2xl font-black text-emerald-600 mt-2 tracking-tight">￥0.00</h3>
             </div>
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                <p class="text-xs text-slate-400 font-medium">累计支出利息</p>
-                <h3 id="statPaidInterest" class="text-lg md:text-2xl font-bold text-amber-600 mt-1.5">￥0.00</h3>
+            <div class="liquid-glass p-4.5 rounded-2xl flex flex-col justify-between transition hover:translate-y-[-2px]">
+                <p class="text-xs text-slate-500 font-medium">累计支出利息</p>
+                <h3 id="statPaidInterest" class="text-lg md:text-2xl font-black text-amber-500 mt-2 tracking-tight">￥0.00</h3>
             </div>
         </div>
 
-        <!-- 控制栏 -->
-        <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between gap-3 items-center">
-            <button onclick="openModal()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition shadow-sm active:scale-95">
+        <!-- 操作与筛选控制栏 -->
+        <div class="liquid-glass p-3.5 rounded-2xl flex flex-col md:flex-row justify-between gap-3 items-center">
+            <button onclick="openModal()" class="w-full md:w-auto bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-medium px-5 py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-indigo-500/25 active:scale-95">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                 新增借款记录
             </button>
-            <div class="flex gap-2 w-full md:w-auto">
-                <select id="filterPlatform" onchange="render()" class="flex-1 md:flex-none border border-slate-200 rounded-xl text-sm px-3.5 py-2.5 bg-slate-50 text-slate-700 outline-none">
+            <div class="flex gap-2.5 w-full md:w-auto">
+                <select id="filterPlatform" onchange="render()" class="liquid-input flex-1 md:flex-none text-xs md:text-sm px-3.5 py-2.5 rounded-xl text-slate-700 outline-none">
                     <option value="ALL">全部平台渠道</option>
                     <option value="支付宝-借呗">支付宝-借呗</option>
                     <option value="支付宝-花呗">支付宝-花呗</option>
@@ -117,7 +191,7 @@
                     <option value="个人/好友借款">个人/好友借款</option>
                     <option value="其他">其他</option>
                 </select>
-                <select id="filterStatus" onchange="render()" class="flex-1 md:flex-none border border-slate-200 rounded-xl text-sm px-3.5 py-2.5 bg-slate-50 text-slate-700 outline-none">
+                <select id="filterStatus" onchange="render()" class="liquid-input flex-1 md:flex-none text-xs md:text-sm px-3.5 py-2.5 rounded-xl text-slate-700 outline-none">
                     <option value="ALL">全部状态</option>
                     <option value="未还清">还款中</option>
                     <option value="已还清">已还清</option>
@@ -125,10 +199,10 @@
             </div>
         </div>
 
-        <!-- 列表/卡片展现区 -->
-        <div class="bg-transparent md:bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 overflow-hidden">
+        <!-- 列表展现区 -->
+        <div class="bg-transparent md:liquid-glass md:rounded-2xl overflow-hidden">
             <table class="w-full text-left text-sm text-slate-600 responsive-table">
-                <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100 text-xs">
+                <thead class="bg-white/40 backdrop-blur-md text-slate-500 font-semibold border-b border-white/40 text-xs">
                     <tr>
                         <th class="p-4">借款项目 / 平台</th>
                         <th class="p-4">借款日期</th>
@@ -141,25 +215,28 @@
                         <th class="p-4 text-center">操作</th>
                     </tr>
                 </thead>
-                <tbody id="loanList" class="md:divide-y md:divide-slate-100">
+                <tbody id="loanList" class="md:divide-y md:divide-slate-200/50">
                     <!-- 动态渲染 -->
                 </tbody>
             </table>
         </div>
     </main>
 
-    <!-- 录入/编辑 弹窗 -->
-    <div id="modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden flex items-end md:items-center justify-center p-0 md:p-4 z-50 transition-all">
-        <div class="bg-white rounded-t-3xl md:rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto pb-8 md:pb-6">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 id="modalTitle" class="text-base font-bold text-slate-900">新增借款记录</h3>
-                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    <!-- iOS 抽屉式弹窗 Modal (Liquid Sheet) -->
+    <div id="modal" class="fixed inset-0 bg-slate-950/30 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 z-50 transition-all duration-300">
+        <div class="liquid-glass bg-white/90 rounded-t-[2.5rem] md:rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-4 max-h-[92vh] overflow-y-auto pb-10 md:pb-6 border-t border-white/60">
+            <!-- iOS Handle 拉条 -->
+            <div class="w-12 h-1.5 bg-slate-300/80 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
+            
+            <div class="flex justify-between items-center border-b border-slate-200/50 pb-3.5">
+                <h3 id="modalTitle" class="text-base font-bold text-slate-900 tracking-tight">新增借款记录</h3>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-200/60 flex items-center justify-center text-slate-500 hover:bg-slate-300/60 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            <form id="loanForm" onsubmit="saveLoan(event)" class="space-y-3.5">
+            <form id="loanForm" onsubmit="saveLoan(event)" class="space-y-4">
                 <input type="hidden" id="loanId">
                 <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">借款渠道/平台</label>
-                    <select id="platform" required class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-800">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">借款渠道/平台</label>
+                    <select id="platform" required class="liquid-input w-full rounded-xl px-3.5 py-3 text-sm text-slate-800">
                         <option value="支付宝-借呗">支付宝-借呗</option>
                         <option value="支付宝-花呗">支付宝-花呗</option>
                         <option value="微粒贷">微粒贷</option>
@@ -170,36 +247,36 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">项目说明 / 备注</label>
-                    <input type="text" id="title" required placeholder="如：周转资金、分期购物" class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">项目说明 / 备注</label>
+                    <input type="text" id="title" required placeholder="如：周转资金、分期购物" class="liquid-input w-full rounded-xl px-3.5 py-3 text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">借款日期</label>
-                        <input type="date" id="loanDate" required class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">借款日期</label>
+                        <input type="date" id="loanDate" required class="liquid-input w-full rounded-xl px-3.5 py-3 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">应还/到期日期</label>
-                        <input type="date" id="dueDate" class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">应还/到期日期</label>
+                        <input type="date" id="dueDate" class="liquid-input w-full rounded-xl px-3.5 py-3 text-sm">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">借款总本金 (元)</label>
-                    <input type="number" step="0.01" id="principal" required min="0" placeholder="0.00" class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-semibold">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">借款总本金 (元)</label>
+                    <input type="number" step="0.01" id="principal" required min="0" placeholder="0.00" class="liquid-input w-full rounded-xl px-3.5 py-3 text-sm font-bold text-slate-800">
                 </div>
-                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                <div class="grid grid-cols-2 gap-3 bg-white/40 p-3.5 rounded-2xl border border-white/50 shadow-inner">
                     <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">已还本金 (元)</label>
-                        <input type="number" step="0.01" id="paidPrincipal" value="0" min="0" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">已还本金 (元)</label>
+                        <input type="number" step="0.01" id="paidPrincipal" value="0" min="0" class="liquid-input w-full rounded-xl px-3 py-2.5 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">已付利息 (元)</label>
-                        <input type="number" step="0.01" id="paidInterest" value="0" min="0" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5">已付利息 (元)</label>
+                        <input type="number" step="0.01" id="paidInterest" value="0" min="0" class="liquid-input w-full rounded-xl px-3 py-2.5 text-sm">
                     </div>
                 </div>
-                <div class="flex space-x-3 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="closeModal()" class="flex-1 py-3 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">取消</button>
-                    <button type="submit" class="flex-1 py-3 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm active:scale-95">保存</button>
+                <div class="flex space-x-3 pt-3 border-t border-slate-200/50">
+                    <button type="button" onclick="closeModal()" class="flex-1 py-3.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-200/60 hover:bg-slate-300/60 transition active:scale-95">取消</button>
+                    <button type="submit" class="flex-1 py-3.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 transition active:scale-95">保存记录</button>
                 </div>
             </form>
         </div>
@@ -221,7 +298,7 @@
             const platformFilter = document.getElementById('filterPlatform').value;
             const statusFilter = document.getElementById('filterStatus').value;
 
-            // 核心筛选逻辑
+            // 核心筛选
             let filtered = loans.filter(item => {
                 const matchPlatform = platformFilter === 'ALL' || item.platform === platformFilter;
                 const isFinished = item.paidPrincipal >= item.principal;
@@ -231,7 +308,7 @@
                 return matchPlatform && matchStatus;
             });
 
-            // 统计计算：基于【筛选后的列表】进行汇总统计联动
+            // 联动统计
             let totalP = 0, paidP = 0, paidI = 0;
             filtered.forEach(item => {
                 totalP += Number(item.principal || 0);
@@ -246,7 +323,7 @@
 
             list.innerHTML = '';
             if (filtered.length === 0) {
-                list.innerHTML = `<tr><td colspan="9" class="text-center py-12 text-slate-400 bg-white rounded-2xl">暂无数据，点击“新增借款记录”开始添加</td></tr>`;
+                list.innerHTML = `<tr><td colspan="9" class="text-center py-12 text-slate-400 liquid-glass rounded-2xl">暂无数据，点击“新增借款记录”开始添加</td></tr>`;
                 return;
             }
 
@@ -254,38 +331,38 @@
                 const percent = Math.min(100, Math.round((item.paidPrincipal / item.principal) * 100) || 0);
                 const isFinished = item.paidPrincipal >= item.principal;
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50/70 transition md:table-row';
+                tr.className = 'hover:bg-white/40 transition md:table-row';
                 
                 tr.innerHTML = `
                     <td class="p-3.5 md:p-4" data-label="平台项目">
                         <div>
-                            <span class="inline-block px-2 py-0.5 text-[11px] rounded bg-slate-100 text-slate-600 font-medium mb-1">${item.platform}</span>
-                            <div class="font-semibold text-slate-800">${item.title}</div>
+                            <span class="inline-block px-2.5 py-0.5 text-[11px] rounded-lg bg-indigo-50/80 text-indigo-600 font-medium border border-indigo-100/50 mb-1">${item.platform}</span>
+                            <div class="font-bold text-slate-800 tracking-tight">${item.title}</div>
                         </div>
                     </td>
                     <td class="p-3.5 md:p-4 text-xs text-slate-400" data-label="借款日期">${item.loanDate || '-'}</td>
-                    <td class="p-3.5 md:p-4 font-semibold text-slate-800" data-label="借款本金">${formatMoney(item.principal)}</td>
-                    <td class="p-3.5 md:p-4 text-emerald-600 font-medium" data-label="已还本金">${formatMoney(item.paidPrincipal)}</td>
-                    <td class="p-3.5 md:p-4 text-amber-600 font-medium" data-label="已还利息">${formatMoney(item.paidInterest)}</td>
+                    <td class="p-3.5 md:p-4 font-bold text-slate-800 tracking-tight" data-label="借款本金">${formatMoney(item.principal)}</td>
+                    <td class="p-3.5 md:p-4 text-emerald-600 font-semibold" data-label="已还本金">${formatMoney(item.paidPrincipal)}</td>
+                    <td class="p-3.5 md:p-4 text-amber-600 font-semibold" data-label="已还利息">${formatMoney(item.paidInterest)}</td>
                     <td class="p-3.5 md:p-4 md:w-32" data-label="还款进度">
                         <div class="w-full md:w-28">
-                            <div class="flex justify-between text-[11px] mb-1 text-slate-400">
+                            <div class="flex justify-between text-[11px] mb-1 text-slate-400 font-medium">
                                 <span>已还</span><span>${percent}%</span>
                             </div>
-                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                            <div class="w-full bg-slate-200/60 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 rounded-full transition-all duration-500 shadow-sm" style="width: ${percent}%"></div>
                             </div>
                         </div>
                     </td>
                     <td class="p-3.5 md:p-4 text-xs text-slate-400" data-label="应还日期">${item.dueDate || '无'}</td>
                     <td class="p-3.5 md:p-4" data-label="当前状态">
                         ${isFinished 
-                            ? '<span class="px-2.5 py-0.5 text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full font-medium">已还清</span>' 
-                            : '<span class="px-2.5 py-0.5 text-xs bg-rose-50 text-rose-600 border border-rose-100 rounded-full font-medium">还款中</span>'}
+                            ? '<span class="px-2.5 py-0.5 text-xs bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded-full font-semibold">已还清</span>' 
+                            : '<span class="px-2.5 py-0.5 text-xs bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-full font-semibold">还款中</span>'}
                     </td>
                     <td class="p-3.5 md:p-4 text-center space-x-2">
-                        <button onclick="editLoan('${item.id}')" class="text-indigo-600 hover:text-indigo-800 text-xs font-medium bg-indigo-50/80 px-3 py-1.5 rounded-lg transition active:scale-95">编辑</button>
-                        <button onclick="deleteLoan('${item.id}')" class="text-slate-400 hover:text-rose-600 text-xs font-medium bg-slate-50 px-2.5 py-1.5 rounded-lg transition active:scale-95">删除</button>
+                        <button onclick="editLoan('${item.id}')" class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold bg-indigo-50/80 px-3 py-1.5 rounded-xl transition active:scale-95 border border-indigo-100/50">编辑</button>
+                        <button onclick="deleteLoan('${item.id}')" class="text-slate-400 hover:text-rose-500 text-xs font-semibold bg-slate-100/60 px-2.5 py-1.5 rounded-xl transition active:scale-95">删除</button>
                     </td>
                 `;
                 list.appendChild(tr);
