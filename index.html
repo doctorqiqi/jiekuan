@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="借还款追踪">
+    <title>个人借还款与利息追踪看板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --safe-left: env(safe-area-inset-left);
+            --safe-right: env(safe-area-inset-right);
+        }
+        body {
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
+        }
+        @media (max-width: 768px) {
+            .responsive-table thead { display: none; }
+            .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+                display: block; width: 100%;
+            }
+            .responsive-table tr {
+                background-color: #ffffff;
+                margin-bottom: 1rem;
+                border: 1px solid #e2e8f0;
+                border-radius: 1rem;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                padding: 1rem 1.1rem;
+            }
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.55rem 0;
+                border-bottom: 1px dashed #f1f5f9;
+                text-align: right;
+                font-size: 0.95rem;
+            }
+            .responsive-table td:last-child {
+                border-bottom: none;
+                padding-top: 0.9rem;
+                justify-content: center;
+                gap: 0.75rem;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #64748b;
+                font-size: 0.82rem;
+                text-align: left;
+                flex-shrink: 0;
+                margin-right: 0.75rem;
+            }
+        }
+        .btn-touch { min-height: 44px; min-width: 44px; }
+        input, select { font-size: 16px !important; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+    <header class="bg-indigo-600 text-white shadow-lg sticky top-0 z-40" style="padding-top: max(0.75rem, var(--safe-top));">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2.5">
+                <i class="fa-solid fa-wallet text-xl text-yellow-300"></i>
+                <h1 class="text-base md:text-xl font-bold tracking-tight">借还款与利息明细</h1>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="exportData()" class="btn-touch bg-indigo-700 hover:bg-indigo-800 active:bg-indigo-900 text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">备份</span>
+                </button>
+                <button onclick="document.getElementById('importFile').click()" class="btn-touch bg-indigo-700 hover:bg-indigo-800 active:bg-indigo-900 text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-upload"></i>
+                    <span class="hidden sm:inline">恢复</span>
+                </button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-5 space-y-5 pb-10">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <p class="text-xs text-slate-500 font-medium">累计借款总本金</p>
+                <h3 id="statTotalPrincipal" class="text-lg md:text-2xl font-bold text-slate-800 mt-2">￥0.00</h3>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <p class="text-xs text-slate-500 font-medium">剩余待还本金</p>
+                <h3 id="statRemainingPrincipal" class="text-lg md:text-2xl font-bold text-rose-600 mt-2">￥0.00</h3>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <p class="text-xs text-slate-500 font-medium">已还总本金</p>
+                <h3 id="statPaidPrincipal" class="text-lg md:text-2xl font-bold text-emerald-600 mt-2">￥0.00</h3>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <p class="text-xs text-slate-500 font-medium">累计已付利息</p>
+                <h3 id="statPaidInterest" class="text-lg md:text-2xl font-bold text-amber-600 mt-2">￥0.00</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between gap-3 items-stretch md:items-center">
+            <button onclick="openModal()" class="btn-touch w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium px-5 py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition shadow-sm">
+                <i class="fa-solid fa-plus"></i> 新增借款记录
+            </button>
+            <div class="flex gap-2 w-full md:w-auto">
+                <select id="filterPlatform" onchange="render()" class="flex-1 md:flex-none border border-slate-200 rounded-xl text-sm px-3 py-2.5 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="ALL">全部平台渠道</option>
+                    <option value="支付宝-借呗">支付宝-借呗</option>
+                    <option value="支付宝-花呗">支付宝-花呗</option>
+                    <option value="微粒贷">微粒贷</option>
+                    <option value="京东金条">京东金条</option>
+                    <option value="银行贷款">银行贷款</option>
+                    <option value="个人/好友借款">个人/好友借款</option>
+                    <option value="其他">其他</option>
+                </select>
+                <select id="filterStatus" onchange="render()" class="flex-1 md:flex-none border border-slate-200 rounded-xl text-sm px-3 py-2.5 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="ALL">全部状态</option>
+                    <option value="未还清">还款中</option>
+                    <option value="已还清">已还清</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="bg-transparent md:bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 overflow-hidden">
+            <table class="w-full text-left text-sm text-slate-600 responsive-table">
+                <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
+                    <tr>
+                        <th class="p-4">借款项目 / 平台</th>
+                        <th class="p-4">借款本金</th>
+                        <th class="p-4">已还本金</th>
+                        <th class="p-4">已还利息</th>
+                        <th class="p-4">还款进度</th>
+                        <th class="p-4">应还日期</th>
+                        <th class="p-4">状态</th>
+                        <th class="p-4 text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="loanList" class="md:divide-y md:divide-slate-100"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-end md:items-center justify-center p-0 md:p-4 z-50">
+        <div class="bg-white rounded-t-3xl md:rounded-2xl shadow-2xl w-full max-w-lg p-5 md:p-6 space-y-4 max-h-[92vh] overflow-y-auto" style="padding-bottom: max(1.5rem, var(--safe-bottom));">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-800">新增借款记录</h3>
+                <button onclick="closeModal()" class="btn-touch text-slate-400 hover:text-slate-600 w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form id="loanForm" onsubmit="saveLoan(event)" class="space-y-4">
+                <input type="hidden" id="loanId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">借款渠道/平台</label>
+                    <select id="platform" required class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                        <option value="支付宝-借呗">支付宝-借呗</option>
+                        <option value="支付宝-花呗">支付宝-花呗</option>
+                        <option value="微粒贷">微粒贷</option>
+                        <option value="京东金条">京东金条</option>
+                        <option value="银行贷款">银行贷款</option>
+                        <option value="个人/好友借款">个人/好友借款</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">项目说明 / 备注</label>
+                    <input type="text" id="title" required placeholder="如：日常周转、大件分期等" class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">借款总本金 (元)</label>
+                        <input type="number" step="0.01" id="principal" required min="0" placeholder="0.00" inputmode="decimal" class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">应还/到期日期</label>
+                        <input type="date" id="dueDate" class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">已还本金 (元)</label>
+                        <input type="number" step="0.01" id="paidPrincipal" value="0" min="0" inputmode="decimal" class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">已付利息 (元)</label>
+                        <input type="number" step="0.01" id="paidInterest" value="0" min="0" inputmode="decimal" class="w-full border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal()" class="btn-touch px-5 py-3 rounded-xl text-sm text-slate-600 hover:bg-slate-100 font-medium">取消</button>
+                    <button type="submit" class="btn-touch px-6 py-3 rounded-xl text-sm bg-indigo-600 text-white font-medium hover:bg-indigo-700 active:bg-indigo-800 shadow-sm">保存记录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let loans = JSON.parse(localStorage.getItem('my_loans_v2') || '[]');
+
+        function saveToStorage() {
+            localStorage.setItem('my_loans_v2', JSON.stringify(loans));
+        }
+
+        function formatMoney(num) {
+            return '￥' + Number(num || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function render() {
+            const list = document.getElementById('loanList');
+            const platformFilter = document.getElementById('filterPlatform').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+
+            let filtered = loans.filter(item => {
+                const matchPlatform = platformFilter === 'ALL' || item.platform === platformFilter;
+                const isFinished = item.paidPrincipal >= item.principal;
+                const matchStatus = statusFilter === 'ALL' ||
+                    (statusFilter === '已还清' && isFinished) ||
+                    (statusFilter === '未还清' && !isFinished);
+                return matchPlatform && matchStatus;
+            });
+
+            let totalP = 0, paidP = 0, paidI = 0;
+            loans.forEach(item => {
+                totalP += Number(item.principal || 0);
+                paidP += Number(item.paidPrincipal || 0);
+                paidI += Number(item.paidInterest || 0);
+            });
+
+            document.getElementById('statTotalPrincipal').innerText = formatMoney(totalP);
+            document.getElementById('statPaidPrincipal').innerText = formatMoney(paidP);
+            document.getElementById('statRemainingPrincipal').innerText = formatMoney(totalP - paidP);
+            document.getElementById('statPaidInterest').innerText = formatMoney(paidI);
+
+            list.innerHTML = '';
+            if (filtered.length === 0) {
+                list.innerHTML = `<tr><td colspan="8" class="text-center py-14 text-slate-400 bg-white rounded-2xl">暂无借款记录<br><span class="text-sm mt-1 block">点击上方“新增借款记录”开始添加</span></td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const percent = Math.min(100, Math.round((item.paidPrincipal / item.principal) * 100) || 0);
+                const isFinished = item.paidPrincipal >= item.principal;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition md:table-row';
+
+                tr.innerHTML = `
+                    <td class="p-3 md:p-4" data-label="平台项目">
+                        <div>
+                            <span class="inline-block px-2 py-0.5 text-xs rounded-md bg-indigo-50 text-indigo-600 font-medium mb-1">${item.platform}</span>
+                            <div class="font-medium text-slate-800">${item.title}</div>
+                        </div>
+                    </td>
+                    <td class="p-3 md:p-4 font-semibold text-slate-700" data-label="借款本金">${formatMoney(item.principal)}</td>
+                    <td class="p-3 md:p-4 text-emerald-600" data-label="已还本金">${formatMoney(item.paidPrincipal)}</td>
+                    <td class="p-3 md:p-4 text-amber-600" data-label="已还利息">${formatMoney(item.paidInterest)}</td>
+                    <td class="p-3 md:p-4 md:w-36" data-label="还款进度">
+                        <div class="w-full md:w-32">
+                            <div class="flex justify-between text-xs mb-1 text-slate-500">
+                                <span>进度</span><span>${percent}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 md:p-4 text-xs text-slate-500" data-label="应还日期">${item.dueDate || '无'}</td>
+                    <td class="p-3 md:p-4" data-label="当前状态">
+                        ${isFinished
+                            ? '<span class="px-2.5 py-1 text-xs bg-emerald-100 text-emerald-700 rounded-full font-medium">已还清</span>'
+                            : '<span class="px-2.5 py-1 text-xs bg-rose-100 text-rose-700 rounded-full font-medium">还款中</span>'}
+                    </td>
+                    <td class="p-3 md:p-4 text-center space-x-2">
+                        <button onclick="editLoan('${item.id}')" class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold bg-indigo-50 px-3 py-2 rounded-lg transition active:bg-indigo-100">编辑/还款</button>
+                        <button onclick="deleteLoan('${item.id}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold bg-rose-50 px-3 py-2 rounded-lg transition active:bg-rose-100">删除</button>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        function openModal(editItem = null) {
+            document.getElementById('modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            if (editItem) {
+                document.getElementById('modalTitle').innerText = '更新借款/还款明细';
+                document.getElementById('loanId').value = editItem.id;
+                document.getElementById('platform').value = editItem.platform;
+                document.getElementById('title').value = editItem.title;
+                document.getElementById('principal').value = editItem.principal;
+                document.getElementById('paidPrincipal').value = editItem.paidPrincipal;
+                document.getElementById('paidInterest').value = editItem.paidInterest;
+                document.getElementById('dueDate').value = editItem.dueDate || '';
+            } else {
+                document.getElementById('modalTitle').innerText = '新增借款记录';
+                document.getElementById('loanForm').reset();
+                document.getElementById('loanId').value = '';
+                document.getElementById('paidPrincipal').value = 0;
+                document.getElementById('paidInterest').value = 0;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function saveLoan(e) {
+            e.preventDefault();
+            const id = document.getElementById('loanId').value;
+            const data = {
+                id: id || Date.now().toString(),
+                platform: document.getElementById('platform').value,
+                title: document.getElementById('title').value,
+                principal: parseFloat(document.getElementById('principal').value) || 0,
+                paidPrincipal: parseFloat(document.getElementById('paidPrincipal').value) || 0,
+                paidInterest: parseFloat(document.getElementById('paidInterest').value) || 0,
+                dueDate: document.getElementById('dueDate').value
+            };
+
+            if (id) {
+                const idx = loans.findIndex(l => l.id === id);
+                if (idx !== -1) loans[idx] = data;
+            } else {
+                loans.unshift(data);
+            }
+
+            saveToStorage();
+            render();
+            closeModal();
+        }
+
+        function editLoan(id) {
+            const item = loans.find(l => l.id === id);
+            if (item) openModal(item);
+        }
+
+        function deleteLoan(id) {
+            if (confirm('确定要删除这条借款记录吗？')) {
+                loans = loans.filter(l => l.id !== id);
+                saveToStorage();
+                render();
+            }
+        }
+
+        function exportData() {
+            const blob = new Blob([JSON.stringify(loans, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `借贷明细备份_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    loans = JSON.parse(event.target.result);
+                    saveToStorage();
+                    render();
+                    alert('数据恢复成功！');
+                } catch(err) {
+                    alert('导入失败，请确保选择的是正确的 JSON 备份文件。');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        render();
+    </script>
+</body>
+</html>
